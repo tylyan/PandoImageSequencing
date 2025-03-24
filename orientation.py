@@ -11,6 +11,7 @@ Notes
 #------------- imports -------------#
 import os
 import copy
+import shutil
 import numpy as np
 import datetime as dt
 from tqdm import tqdm
@@ -121,6 +122,17 @@ def statistical_sequence(points, start_index, end_index, output_path):
         else:
             points_replace.append(point)
 
+    if len(first_half_bin) == 0:
+        # If no points are later than end slate, initialize first_half_bin
+        # with points that are closest to the end slate timestamp
+        first_half_bin = points_replace[-1:]
+        points_replace = points_replace[:-1]
+
+    if len(second_half_bin) == 0:
+        # If no points are earlier than start slate, initialize second_half_bin
+        # with points that are closest to the start slate timestamp
+        second_half_bin = points_replace[:-1]
+        points_replace = points_replace[-1:]
 
 
 
@@ -237,8 +249,11 @@ def statistical_sequence(points, start_index, end_index, output_path):
 
 
     for p, point in enumerate(tqdm(new_points)):
-        os.system(f"cp '{point.fpath}' {output_path}/jpgs/{p}_{point.tag}_{p}_new-time={str(point.timestamp).replace(' ', '_')}.jpg")
-        os.system(f"cp '{point.dng}' {output_path}/dngs/{p}_{point.tag}_{p}_new-time={str(point.timestamp).replace(' ', '_')}.dng")
+        dst_jpg = f"{output_path}/jpgs/{p}_{point.tag}_{p}_new-time={str(point.timestamp).replace(' ', '_')}.jpg"
+        dst_dng = f"{output_path}/dngs/{p}_{point.tag}_{p}_new-time={str(point.timestamp).replace(' ', '_')}.dng"
+
+        shutil.copy2(point.fpath, dst_jpg)
+        shutil.copy2(point.dng, dst_dng)
 
     print(f"END SLATE: {end_time}. Predicted from merge: {new_points[-1].timestamp}")
 
@@ -356,14 +371,19 @@ def suggest_reordering(points, first_half_bin, second_half_bin, output_path, sta
 
 
 
-    os.system(f"rm -rf {output_path}")
-    os.system(f"mkdir {output_path}")
-    os.system(f"mkdir {output_path}/jpgs/")
-    os.system(f"mkdir {output_path}/dngs/")
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
+
+    os.mkdir(output_path)
+    os.mkdir(f'{output_path}/jpgs')
+    os.mkdir(f'{output_path}/dngs')
 
     for p, point in enumerate(tqdm(new_points)):
-        os.system(f"cp '{point.fpath}' {output_path}/jpgs/{p}_{point.tag}_{p}_new-time={str(point.timestamp).replace(' ', '_')}.jpg")
-        os.system(f"cp '{point.dng}' {output_path}/dngs/{p}_{point.tag}_{p}_new-time={str(point.timestamp).replace(' ', '_')}.dng")
+        dst_jpg = f"{output_path}/jpgs/{p}_{point.tag}_{p}_new-time={str(point.timestamp).replace(' ', '_')}.jpg"
+        dst_dng = f"{output_path}/dngs/{p}_{point.tag}_{p}_new-time={str(point.timestamp).replace(' ', '_')}.dng"
+
+        shutil.copy2(point.fpath, dst_jpg)
+        shutil.copy2(point.dng, dst_dng)
 
 
     print(f"END SLATE: {end_time}. Predicted from merge: {new_points[-1].timestamp}")

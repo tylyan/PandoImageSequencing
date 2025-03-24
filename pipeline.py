@@ -115,6 +115,7 @@ class Redirector(object):
             'sh_bin':None,
             'bad_images':None,
             'final_list':None,
+            'diffs_combined_mean': None,
         }
         """Settings for current pipeline configuration; saved after each operation"""
 
